@@ -1,0 +1,33 @@
+function [O_t,t,sigma_O_t] = runQMSpinDynamics(spin_system,dynamics)
+
+if (spin_system.type == "radical pair" & spin_system.use_symmetry == false)
+    % get dimensionality of spin system
+    Z = prod(spin_system.g_1) * prod(spin_system.g_2) ;
+    d = 4 * Z ;
+    % construct the spin Hamiltonian
+    H = electronHamiltonianQMSp(spin_system.omega_1 , spin_system.omega_2, ...
+        spin_system.exchange, spin_system.dipolar_tensor,  ...
+        spin_system.A_1_tensors, spin_system.A_2_tensors, ...
+        spin_system.g_1,spin_system.g_2) ;
+    % construct the reaction operator
+    k_S = spin_system.k_S ;
+    k_T = spin_system.k_T ;
+    K = kron((0.5*k_S)*singProj()+(0.5*k_T)*tripProj(),speye(Z))  ;
+    % construct the effective Hamiltonian
+    H_eff = H - 1.0i*K ;
+    if (dynamics.sampling.method == "SU(N)")
+        [O_t,sigma_O_t,t] = runSUNDynamics(H_eff,Z,dynamics)  ;
+    end
+
+elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
+    % if using symmetry first construct the symmetry blocks
+    n_blocks_1 = numel(spin_system.N_1) ;
+    n_blocks_2 = numel(spin_system.N_2) ;
+    n_blocks = n_blocks_1 + n_blocks_2 ;
+
+    [block_weights_1,g_blocks,n_subspaces] = createSymmetryBlocks(g,N)
+
+end
+
+
+end
