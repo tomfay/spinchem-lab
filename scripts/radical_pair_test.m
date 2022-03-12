@@ -45,22 +45,22 @@ dynamics.observables = struct() ;
 dynamics.observables.O = {kron(singProj(),speye(Z)),kron(tripProj(),speye(Z)),speye(4*Z)} ;
 
 % run dynamics
-% tic
-% [O_t_off,t,sigma_O_t_off] = runQMSpinDynamics(spin_system,dynamics) ;
-% toc
-dynamics.sampling.initial_electron_spin_state = "triplet" ;
 tic
-[O_t_T_off,t,sigma_O_t_T_off] = runQMSpinDynamics(spin_system,dynamics) ;
+[O_t_off,t,sigma_O_t_off] = runQMSpinDynamics(spin_system,dynamics) ;
 toc
-
-% run dynamics with field on
-spin_system.omega_1 = [0;0;25]*(g_per/g_e) ;
-spin_system.omega_2 = [0;0;25]*(g_ndi/g_e) ;
-dynamics.sampling.initial_electron_spin_state = "singlet" ;
+% dynamics.sampling.initial_electron_spin_state = "triplet" ;
 % tic
-% [O_t_on,t,sigma_O_t_on] = runQMSpinDynamics(spin_system,dynamics) ;
+% [O_t_T_off,t,sigma_O_t_T_off] = runQMSpinDynamics(spin_system,dynamics) ;
 % toc
-dynamics.sampling.initial_electron_spin_state = "triplet" ;
-tic
-[O_t_T_on,t,sigma_O_t_T_on] = runQMSpinDynamics(spin_system,dynamics) ;
-toc
+% 
+% % run dynamics with field on
+% spin_system.omega_1 = [0;0;25]*(g_per/g_e) ;
+% spin_system.omega_2 = [0;0;25]*(g_ndi/g_e) ;
+% dynamics.sampling.initial_electron_spin_state = "singlet" ;
+% % tic
+% % [O_t_on,t,sigma_O_t_on] = runQMSpinDynamics(spin_system,dynamics) ;
+% % toc
+% dynamics.sampling.initial_electron_spin_state = "triplet" ;
+% tic
+% [O_t_T_on,t,sigma_O_t_T_on] = runQMSpinDynamics(spin_system,dynamics) ;
+% toc
