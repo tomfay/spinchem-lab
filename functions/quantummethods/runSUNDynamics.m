@@ -7,7 +7,7 @@ function [O_t,sigma_O_t,t] = runSUNDynamics(H,Z,dynamics)
         psi_0_weights = [1] ;
     elseif (dynamics.sampling.initial_electron_spin_state == "triplet")
         psi_0s = [[1;0;0;0],[0;1/sqrt(2);1/sqrt(2);0],[0;0;0;1]] ;
-        psi_0_weights = [1,1,1] ;
+        psi_0_weights = [1/3,1/3,1/3] ;
     end
     n_psi_0s = size(psi_0s,2) ;
     
@@ -18,15 +18,17 @@ function [O_t,sigma_O_t,t] = runSUNDynamics(H,Z,dynamics)
 
     for r = 1:dynamics.sampling.n_sample
         psi_nuc_0 = createSUNCoherentState(Z) ;
+        O_t_sample = zeros([n_obs,n_data]) ;
         for n = 1:n_psi_0s 
             psi_0 = kron(psi_0s(:,n),psi_nuc_0) ;
+            
             if (dynamics.integrator.method == "adaptive SIA")
                 [O_t_traj, t] = runDynamicsAdaptiveSIA(psi_0,H,dynamics.integrator.n_steps,...
                     dynamics.integrator.dt,dynamics.observables.O,...
                     dynamics.integrator.dim_krylov,dynamics.integrator.tol,...
                     dynamics.integrator.stride) ;
             end
-            O_t_sample = O_t_traj * psi_0_weights(n) ;
+            O_t_sample = O_t_sample + O_t_traj * psi_0_weights(n) ;
         end
         O_t = O_t + O_t_sample ;
         sigma_O_t = sigma_O_t + O_t_sample.*O_t_sample ;

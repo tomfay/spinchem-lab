@@ -20,6 +20,7 @@ if (spin_system.type == "radical pair" & ~isfield(spin_system,"use_symmetry"))
     end
 
 elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
+
     % if using symmetry first construct the symmetry blocks
     n_blocks_1 = numel(spin_system.N_1) ;
     n_blocks_2 = numel(spin_system.N_2) ;
@@ -79,6 +80,7 @@ elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
             if (Z_subspaces(J) > dynamics.sampling.n_sample)
                 [O_t_subspace,sigma_O_t_subspace,t] = runSUNDynamics(H_eff,Z_subspaces(J),dynamics_J)  ;
                 O_t = O_t + total_weight_Zs(J) * O_t_subspace ;
+                sigma_O_t = sigma_O_t + (total_weight_Zs(J)*total_weight_Zs(J)) * (sigma_O_t_subspace.*sigma_O_t_subspace) ;
             else
                 [O_t_subspace,t] = runFullTraceDynamics(H_eff,Z_subspaces(J),dynamics_J)  ;
                 O_t = O_t + total_weight_Zs(J) * O_t_subspace ;
@@ -87,6 +89,7 @@ elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
         end
     end
     O_t = (1/Z)*O_t ;
+    sigma_O_t = sqrt((1/(Z*Z))*sigma_O_t) ;
 
 end
 

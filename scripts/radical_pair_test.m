@@ -16,9 +16,9 @@ spin_system.exchange = -0.25*0 ;
 spin_system.dipolar_tensor = zeros([3,3]) ;
 spin_system.A_1_tensors = kron([-0.410,-0.410,-0.410,-0.310,-0.310],speye(3)) ;
 % spin_system.A_1_tensors = kron([-0.410,-0.410,-0.410],speye(3)) ;
-spin_system.A_2_tensors = kron([-0.0963,-0.0963,-0.1927,-0.1927,-0.1927,-0.1927],speye(3)) ;
+spin_system.A_2_tensors = kron([-0.0963,-0.0963,-0.1927,-0.1927],speye(3)) ;
 spin_system.g_1 = [2,2,2,2,2] ;
-spin_system.g_2 = [3,3,2,2,2,2] ;
+spin_system.g_2 = [3,3,2,2] ;
 spin_system.k_S = 20/gamma_e ;
 spin_system.k_T = 0.5/gamma_e ;
 % spin_system.k_S = 0.5/gamma_e ;
@@ -53,13 +53,13 @@ toc
 % [O_t_T_off,t,sigma_O_t_T_off] = runQMSpinDynamics(spin_system,dynamics) ;
 % toc
 % 
-% % run dynamics with field on
-% spin_system.omega_1 = [0;0;25]*(g_per/g_e) ;
-% spin_system.omega_2 = [0;0;25]*(g_ndi/g_e) ;
-% dynamics.sampling.initial_electron_spin_state = "singlet" ;
-% % tic
-% % [O_t_on,t,sigma_O_t_on] = runQMSpinDynamics(spin_system,dynamics) ;
-% % toc
+% run dynamics with field on
+spin_system.omega_1 = [0;0;25]*(g_per/g_e) ;
+spin_system.omega_2 = [0;0;25]*(g_ndi/g_e) ;
+dynamics.sampling.initial_electron_spin_state = "singlet" ;
+tic
+[O_t_on,t,sigma_O_t_on] = runQMSpinDynamics(spin_system,dynamics) ;
+toc
 % dynamics.sampling.initial_electron_spin_state = "triplet" ;
 % tic
 % [O_t_T_on,t,sigma_O_t_T_on] = runQMSpinDynamics(spin_system,dynamics) ;
