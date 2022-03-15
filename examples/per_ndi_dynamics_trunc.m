@@ -10,7 +10,7 @@ k_S_permus = 20 ;
 k_T_permus = 0.5 ;
 
 % include triplet fraction, f_T = triplet fraction, set to true to include
-include_triplet_fraction = false ;
+include_triplet_fraction = true ;
 f_T = 0.05 ;
 
 % the important outputs are t, O_t_on, sigma_O_t_on, O_t_off, and
@@ -69,8 +69,8 @@ dynamics.observables.O_el = {speye(4),(singProj()),tripProjPlus(),(tripProj()-tr
 % run dynamics
 tic
 [O_t_off,t,sigma_O_t_off] = runQMSpinDynamics(spin_system,dynamics) ;
-O_t_off = O_t_off * (1/O_t_off(3,1)) ;
-sigma_O_t_off = sigma_O_t_off * (1/O_t_off(3,1)) ;
+O_t_off = O_t_off * (1/O_t_off(1,1)) ;
+sigma_O_t_off = sigma_O_t_off * (1/O_t_off(1,1)) ;
 toc
 
 % run dynamics with field on
@@ -79,8 +79,8 @@ spin_system.omega_2 = [0;0;25]*(g_ndi/g_e) ;
 dynamics.sampling.initial_electron_spin_state = "singlet" ;
 tic
 [O_t_on,t,sigma_O_t_on] = runQMSpinDynamics(spin_system,dynamics) ;
-O_t_on = O_t_on * (1/O_t_on(3,1)) ;
-sigma_O_t_on = sigma_O_t_on * (1/O_t_on(3,1)) ;
+O_t_on = O_t_on * (1/O_t_on(1,1)) ;
+sigma_O_t_on = sigma_O_t_on * (1/O_t_on(1,1)) ;
 toc
 
 if (include_triplet_fraction)
@@ -89,15 +89,15 @@ if (include_triplet_fraction)
     spin_system.omega_2 = [0;0;0]*(g_ndi/g_e) ;
     tic
     [O_t_T_off,t,sigma_O_t_T_off] = runQMSpinDynamics(spin_system,dynamics) ;
-    O_t_T_off = O_t_T_off * (1/O_t_T_off(3,1)) ;
-    sigma_O_t_T_off = sigma_O_t_T_off * (1/O_t_T_off(3,1)) ;
+    O_t_T_off = O_t_T_off * (1/O_t_T_off(1,1)) ;
+    sigma_O_t_T_off = sigma_O_t_T_off * (1/O_t_T_off(1,1)) ;
     toc
     spin_system.omega_1 = [0;0;25]*(g_per/g_e) ;
     spin_system.omega_2 = [0;0;25]*(g_ndi/g_e) ;
     tic
     [O_t_T_on,t,sigma_O_t_T_on] = runQMSpinDynamics(spin_system,dynamics) ;
-    O_t_T_on = O_t_T_on * (1/O_t_T_on(3,1)) ;
-    sigma_O_t_T_on = sigma_O_t_T_on * (1/O_t_T_on(3,1)) ;
+    O_t_T_on = O_t_T_on * (1/O_t_T_on(1,1)) ;
+    sigma_O_t_T_on = sigma_O_t_T_on * (1/O_t_T_on(1,1)) ;
     toc
     O_t_S_on = O_t_on ;
     sigma_O_t_S_on = sigma_O_t_on ;
@@ -108,3 +108,5 @@ if (include_triplet_fraction)
     sigma_O_t_on = sqrt( (1-f_T)^2 * sigma_O_t_S_on.*sigma_O_t_S_on + (f_T)^2 * sigma_O_t_T_on.*sigma_O_t_T_on) ;
     sigma_O_t_off = sqrt( (1-f_T)^2 * sigma_O_t_S_off.*sigma_O_t_S_off + (f_T)^2 * sigma_O_t_T_off.*sigma_O_t_T_off) ;
 end
+
+t_mus = t /gamma_e ;
