@@ -18,6 +18,11 @@ if (spin_system.type == "radical pair" & ~isfield(spin_system,"use_symmetry"))
     if (dynamics.sampling.method == "SU(N)")
         [O_t,sigma_O_t,t] = runSUNDynamics(H_eff,Z,dynamics)  ;
     end
+    if (dynamics.sampling.method == "full trace")
+        [O_t,t] = runFullTraceDynamics(H_eff,Z,dynamics)  ;
+        sigma_O_t = zeros(size(O_t)) ;
+    end
+    
 
 elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
 
