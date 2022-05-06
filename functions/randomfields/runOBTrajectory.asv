@@ -1,0 +1,13 @@
+function f_t = runOBTrajectory(fluct_info,dt,n_steps,n_steps_fluct)
+% computes the time-averaged Ornstein-Uhlenbeck process
+
+f_t = zeros([fluct_info.n_OB,n_steps]) ;
+dt_fluct = dt / n_steps_fluct ;
+f_0 = sqrt(fluct_info.Deltaf_sq_OB).*randn([fluct_info.n_OB,1]) ;
+k = 
+for k = 1:n_steps
+    f_t_segment = generateOverdampedOscillatorTrajectory(f_0, alpha, k, 1.0, dt_fluct, n_steps_fluct+1)
+end
+
+
+end

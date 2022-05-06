@@ -1,6 +1,11 @@
 function [O_t,t,sigma_O_t] = runQMSpinDynamics(spin_system,dynamics)
 
 if (spin_system.type == "radical pair" & ~isfield(spin_system,"use_symmetry"))
+    if (isfield(spin_system,'include_fluctuations'))
+        if (spin_system.include_fluctuations)
+            error("Including fluctuations is not currently implemented for this type of simulation.") ;
+        end
+    end
     % get dimensionality of spin system
     Z = prod(spin_system.g_1) * prod(spin_system.g_2) ;
     d = 4 * Z ;
@@ -25,22 +30,42 @@ if (spin_system.type == "radical pair" & ~isfield(spin_system,"use_symmetry"))
     
 
 elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
+    
+    % check to see if fluctuations are included & what type are included
+    if (isfield(spin_system,'include_fluctuations'))
+        if (spin_system.include_fluctuations)
+            include_fluctuations = true ;
+            if ( isfield(spin_system,'fluct_operators_OB_el') )
+            include_fluct_OB_el = true ;
+            include_fluct_OB = true ;
+            n_fluct_el = numel(spin_system.fluct_operators_OB_el) ;
+            end
+        else
+            include_fluctuations = false ;
+        end
+    else
+        include_fluctuations = false ;
+    end
+
 
     % if using symmetry first construct the symmetry blocks
     n_blocks_1 = numel(spin_system.N_1) ;
     n_blocks_2 = numel(spin_system.N_2) ;
     n_blocks = n_blocks_1 + n_blocks_2 ;
-
+    % generate the subspaces for the different symmetry blocks
     [block_weights_1,g_blocks_1,n_subspaces_1] = createSymmetryBlocks(spin_system.g_1,spin_system.N_1) ;
     [block_weights_2,g_blocks_2,n_subspaces_2] = createSymmetryBlocks(spin_system.g_2,spin_system.N_2) ;
     block_weights = [block_weights_1,block_weights_2] ;
     g_blocks = [g_blocks_1,g_blocks_2] ;
     n_subspaces = [n_subspaces_1,n_subspaces_2]  ;
+    % Find the total weights of each subspace
     [total_weights,total_weight_Zs, Z_subspaces] = generateSubspaceTotalWeights(block_weights,n_subspaces,g_blocks) ;
-    % determine subspaces to exclude
+
     Z = prod([spin_system.g_1.^spin_system.N_1,spin_system.g_2.^spin_system.N_2]) ;
     N_subspaces_tot = prod(n_subspaces) ;
-
+    % determine subspaces to exclude 
+    % if discarding large Z - discard the largest Z subspaces up to some
+    % tolerance
     if (dynamics.sampling.symmetry_block_truncation == "discard large Z")
         [Z_subspaces_sort,sort_indices] = sort(Z_subspaces,'descend') ;
         l = 1 ;
@@ -55,6 +80,8 @@ elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
     else
         discarded_subspace_indices = [] ;
     end
+
+    % Run the dynamcis for each subspace and weight it appropriately
     n_data = 1+floor(dynamics.integrator.n_steps/dynamics.integrator.stride) ;
     n_obs = numel(dynamics.observables.O_el) ;
     O_t = zeros([n_obs,n_data]) ;
@@ -82,13 +109,35 @@ elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
             for k = 1:n_obs
                 dynamics_J.observables.O{k} = kron(dynamics.observables.O_el{k},speye(Z_subspaces(J))) ;
             end
-            if (Z_subspaces(J) > dynamics.sampling.n_sample)
-                [O_t_subspace,sigma_O_t_subspace,t] = runSUNDynamics(H_eff,Z_subspaces(J),dynamics_J)  ;
+            if (~include_fluctuations)
+                % calculate the exact trace if the number of SU(N) samples
+                % is greater than the Z of the subspace, otherwise use
+                % SU(N) sampling
+                if (Z_subspaces(J) > dynamics.sampling.n_sample)
+                    [O_t_subspace,sigma_O_t_subspace,t] = runSUNDynamics(H_eff,Z_subspaces(J),dynamics_J)  ;
+                    O_t = O_t + total_weight_Zs(J) * O_t_subspace ;
+                    sigma_O_t = sigma_O_t + (total_weight_Zs(J)*total_weight_Zs(J)) * (sigma_O_t_subspace.*sigma_O_t_subspace) ;
+                else
+                    [O_t_subspace,t] = runFullTraceDynamics(H_eff,Z_subspaces(J),dynamics_J)  ;
+                    O_t = O_t + total_weight_Zs(J) * O_t_subspace ;
+                end
+            else
+                % create the set of fluctuation operators & information
+                % about fluctuating terms int he Hamiltonian
+                fluct_info = struct() ;
+                fluct_info.A = {} ;
+                if (include_fluct_OB_el)
+                    for k = 1:n_fluct_el
+                        fluct_info.A = [fluct_info.A,{kron(spin_system.fluct_operators_OB_el{k},speye(Z_subspaces(J)))}] ;
+                    end
+                    fluct_info.Deltaf_sq_OB = spin_system.fluct_Deltaf_sq_OB_el ;
+                    fluct_info.tau_OB = spin_system.fluct_tau_OB_el ;
+                    fluct_info.n_OB = numel(fluct_info.A) ;
+                end
+                % run the dynamics with fluctuations
+                [O_t_subspace,sigma_O_t_subspace,t] = runSUNDynamicsTDFluct(H_eff,Z_subspaces(J),dynamics_J,fluct_info)  ;
                 O_t = O_t + total_weight_Zs(J) * O_t_subspace ;
                 sigma_O_t = sigma_O_t + (total_weight_Zs(J)*total_weight_Zs(J)) * (sigma_O_t_subspace.*sigma_O_t_subspace) ;
-            else
-                [O_t_subspace,t] = runFullTraceDynamics(H_eff,Z_subspaces(J),dynamics_J)  ;
-                O_t = O_t + total_weight_Zs(J) * O_t_subspace ;
             end
             
         end
