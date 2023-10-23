@@ -1,4 +1,4 @@
-function [O_t,t,sigma_O_t] = runQMSpinDynamics(spin_system,dynamics)
+function [O_t,t,sigma_O_t,info] = runQMSpinDynamics(spin_system,dynamics)
 
 if (spin_system.type == "radical pair" & ~isfield(spin_system,"use_symmetry"))
     if (isfield(spin_system,'include_fluctuations'))
@@ -147,5 +147,5 @@ elseif (spin_system.type == "radical pair" & spin_system.use_symmetry == true)
 
 end
 
-
+info.H = H ;
 end
