@@ -93,5 +93,18 @@ toc
 % end
 % [O_t,t] = runFullTraceDynamics(info_off.H,Z,dynamics_full)  ;
 
+rho_0 = full(kron(singProj(),speye(Z))) ;
+P_S = rho_0 ;
+rho_0 = rho_0 / Z ;
+U = expm(-1.0i * info_off.H*t(2)-t(1)) ;
+U_dag = U' ;
+O_t_full = zeros([1,numel(t)]) ;
+rho_t = rho_0 ;
+O_t_full(1) = sum(P_S.*rho_t,'all') ;
+for r = 2:numel(t) 
+    rho_t = U * rho_t * U_dag ;
+    O_t_full(r) = sum(P_S.*rho_t,'all') ;
+end
+
 t_mus = t/gamma_e ;
 
